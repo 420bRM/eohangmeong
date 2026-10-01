@@ -1,0 +1,22 @@
+{
+  "name": "어항멍",
+  "short_name": "어항멍",
+  "description": "폰 속에 물고기 한 마리가 삽니다. 기울이면 물이 출렁이는 작은 어항.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "portrait",
+  "background_color": "#06243f",
+  "theme_color": "#06243f",
+  "lang": "ko",
+  "dir": "ltr",
+  "categories": ["entertainment", "lifestyle", "health"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
