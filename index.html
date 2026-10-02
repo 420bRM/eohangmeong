@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>어항멍</title>
-<meta name="description" content="폰 속에 물고기 한 마리가 삽니다. 기울이면 물이 출렁이는 작은 어항.">
+<meta name="description" content="폰을 기울이면 물이 출렁이는 작은 어항. 먹이 주고 유리 닦고, 친구를 들이고 꾸미세요. 광고 없음.">
 <meta name="theme-color" content="#06243f">
 <meta name="color-scheme" content="dark light">
 <link rel="manifest" href="manifest.webmanifest">
@@ -16,72 +16,93 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="어항멍">
 <meta property="og:title" content="어항멍">
-<meta property="og:description" content="폰 속에 물고기 한 마리가 삽니다. 기울이면 물이 출렁입니다.">
+<meta property="og:description" content="폰을 기울이면 물이 출렁이는 작은 어항. 광고 없이, 오프라인에서도.">
 <meta property="og:image" content="icons/og.png">
 <meta property="og:type" content="website">
 <link rel="preload" href="fonts/gowun-dodum.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=2.0.0">
 </head>
 <body>
-<canvas id="c" role="img" aria-label="물고기 한 마리가 사는 어항"></canvas>
+<canvas id="c" role="img" aria-label="물고기가 사는 어항"></canvas>
 
 <div id="ui" class="idle">
   <div class="bar top">
-    <div class="pill seg" role="group" aria-label="어항 크기">
-      <button data-z="0">넓게</button>
-      <button data-z="1" class="on">보통</button>
-      <button data-z="2">가까이</button>
+    <div class="pill stats" id="stats" role="group" aria-label="어항 상태">
+      <span class="st" title="진주"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8.5" r="5.6" fill="#f3ecf6"/><circle cx="6.2" cy="6.6" r="1.8" fill="#fff"/><circle cx="8" cy="8.5" r="5.6" fill="none" stroke="#c9b8d6" stroke-width="1"/></svg><b id="pearls">0</b><span class="sr">진주</span></span>
+      <span class="st" title="포만도"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5" cy="5.5" r="2.3" fill="#c9733a"/><circle cx="11.2" cy="7" r="2.1" fill="#c9733a"/><circle cx="6.8" cy="11.6" r="2.2" fill="#c9733a"/></svg><b id="fullV">70%</b><span class="sr">포만도</span></span>
+      <span class="st" title="청결도"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5l1.5 4.2 4.3 1.6-4.3 1.6L8 13.2 6.5 8.9 2.2 7.3l4.3-1.6z" fill="#bff2ec"/></svg><b id="cleanV">100%</b><span class="sr">청결도</span></span>
     </div>
     <div class="act">
       <button class="pill" id="feed" aria-label="먹이 주기" title="먹이 주기">
         <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5" cy="5" r="2.3" fill="#c9733a"/><circle cx="11.2" cy="7" r="2.1" fill="#c9733a"/><circle cx="6.8" cy="11.6" r="2.2" fill="#c9733a"/></svg>
       </button>
-      <button class="pill" id="mood" aria-label="분위기 설정" aria-expanded="false" aria-controls="panel" title="분위기">
-        <svg viewBox="0 0 16 16" aria-hidden="true" id="moodIcon"></svg><span>분위기</span>
-      </button>
-      <button class="pill" id="snd" aria-label="물소리 켜기" aria-pressed="false" title="물소리">
+      <button class="pill" id="snd" aria-label="소리 켜기" aria-pressed="false" title="소리">
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3v10L5 10H2z" fill="currentColor"/><path id="wave" d="M11 5.5c1 .8 1 4.2 0 5" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".3"/></svg>
       </button>
-    </div>
-  </div>
-  <div id="panel" class="panel" hidden>
-    <div class="prow"><span class="plabel">물 높이</span><div class="prange"><input id="fill" type="range" min="50" max="90" step="1" value="68" aria-label="물 높이 (퍼센트, 최소 50)"><span id="fillVal">68%</span></div></div>
-    <div class="prow"><span class="plabel">시간대</span><div class="pseg" data-k="tod"><button data-v="0">지금</button><button data-v="1">새벽</button><button data-v="2">낮</button><button data-v="3">노을</button><button data-v="4">밤</button></div></div>
-    <div class="prow"><span class="plabel">날씨</span><div class="pseg" data-k="rain"><button data-v="0">맑음</button><button data-v="1">비</button></div></div>
-    <div class="prow"><span class="plabel">로파이 필터</span><div class="pseg" data-k="lofi"><button data-v="0">끔</button><button data-v="1">켬</button></div></div>
-    <div class="prow"><span class="plabel">움직임</span><div class="pseg" data-k="smooth"><button data-v="0">배터리 절약</button><button data-v="1">부드럽게</button></div></div>
-    <div class="prow" id="installRow" hidden>
-      <span class="plabel">앱으로 쓰기</span>
-      <button class="solid" id="install" hidden>홈 화면에 설치</button>
-      <p class="note" id="installNote" hidden>Safari 아래쪽 공유 버튼 → ‘홈 화면에 추가’를 누르면 앱처럼 열 수 있습니다.</p>
-    </div>
-    <div class="prow info">
-      <button class="linkbtn" id="reset">새 물고기 들이기</button>
-      <a class="linkbtn" href="privacy.html">개인정보</a>
-      <span class="ver" id="ver">v1.0.0</span>
+      <button class="pill" id="menuBtn" aria-label="메뉴 열기" aria-haspopup="dialog" title="메뉴">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>메뉴</span>
+      </button>
     </div>
   </div>
   <div class="bar bottom">
-    <div class="chip">
-      <span id="fname" contenteditable="true" spellcheck="false" role="textbox" aria-label="물고기 이름 (눌러서 바꾸기)">뽀글이</span>
-      <div class="meta"><span id="fday">함께한 지 1일째</span><span class="hearts" id="fheart" aria-label="친밀도">♡♡♡♡♡</span></div>
-    </div>
+    <button class="chip" id="chip" aria-label="고른 생물 보기">
+      <span id="fname">뽀글이</span>
+      <span class="meta"><span id="fsp">금붕어</span><span id="fday">함께한 지 1일째</span><span class="hearts" id="fheart" aria-label="친밀도">♡♡♡♡♡</span></span>
+    </button>
     <div class="side">
       <div id="hint" class="off" aria-live="polite"></div>
     </div>
   </div>
 </div>
 
+<div id="editBar" class="floatbar" hidden>
+  <span>장식을 끌어 옮기고, 톡 누르면 치울 수 있습니다.</span>
+  <button class="solid" id="editDone">완료</button>
+</div>
+<div id="decoPop" class="floatbar pop" hidden></div>
+
+<div id="sheet" class="sheet" hidden role="dialog" aria-modal="false" aria-label="메뉴">
+  <div class="sheet-head">
+    <nav class="tabs" role="tablist" aria-label="메뉴 탭">
+      <button role="tab" data-tab="shop">상점</button>
+      <button role="tab" data-tab="deco">꾸미기</button>
+      <button role="tab" data-tab="tank">어항</button>
+      <button role="tab" data-tab="dex">도감</button>
+      <button role="tab" data-tab="set">설정</button>
+    </nav>
+    <button class="x" id="sheetClose" aria-label="메뉴 닫기">✕</button>
+  </div>
+  <div class="sheet-pearls"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8.5" r="5.6" fill="#f3ecf6"/><circle cx="6.2" cy="6.6" r="1.8" fill="#fff"/></svg><b id="pearls2">0</b> 진주</div>
+  <div class="sheet-body" id="sheetBody" role="tabpanel"></div>
+</div>
+
+<div id="modal" class="modal" hidden>
+  <div class="mcard" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <h2 id="mTitle"></h2>
+    <div id="mBody"></div>
+    <div class="mbtns" id="mBtns"></div>
+  </div>
+</div>
+
+<div id="clock" hidden aria-live="off">
+  <div class="cdate" id="cDate"></div>
+  <div class="ctime" id="cTime"></div>
+  <div class="cbat" id="cBat"></div>
+  <button class="pill cexit" id="clockExit">시계 끄기</button>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
 <div id="start">
   <div class="card">
     <h1>어항멍</h1>
-    <p id="startMsg">폰 속에 물고기 한 마리가 삽니다.<br>기울이면 물이 출렁입니다.</p>
+    <p id="startMsg">폰 속에 물고기가 삽니다.<br>기울이면 물이 출렁입니다.</p>
     <button id="go">어항 열기</button>
-    <small>기울기 센서 권한을 요청할 수 있습니다.<br>어항이 열려 있는 동안 화면이 꺼지지 않습니다.</small>
+    <small>기울기 센서 권한을 요청할 수 있습니다.<br>광고 없이, 인터넷 없이도 열립니다.</small>
   </div>
 </div>
 
 <noscript><p style="position:fixed;inset:auto 0 40%;text-align:center;color:#eafcfb">어항멍은 자바스크립트가 켜져 있어야 움직입니다.</p></noscript>
-<script src="js/app.js"></script>
+<script type="module" src="js/app.js?v=2.0.0"></script>
 </body>
 </html>
