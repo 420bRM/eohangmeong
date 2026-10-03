@@ -1,9 +1,9 @@
 // 어항멍 v2: 물리, 생물, 돌봄, 화면
-import {SPECIES, SPECIES_ORDER, DECOR, DECOR_ORDER, FLOORS, FLOOR_ORDER, BACKGROUNDS, BG_ORDER, ITEMS, ITEM_ORDER, REWARD, ACHIEVEMENTS, NAMES, FIRST_NAME, LIMITS} from './data.js?v=2.0.0';
-import {drawCritter, drawDecor, decorSize, drawFloor, drawThumb} from './critters.js?v=2.0.0';
-import {createMusic, MUSIC_KINDS} from './music.js?v=2.0.0';
+import {SPECIES, SPECIES_ORDER, DECOR, DECOR_ORDER, FLOORS, FLOOR_ORDER, BACKGROUNDS, BG_ORDER, ITEMS, ITEM_ORDER, REWARD, ACHIEVEMENTS, NAMES, FIRST_NAME, LIMITS} from './data.js?v=2.0.1';
+import {drawCritter, drawDecor, decorSize, drawFloor, drawThumb} from './critters.js?v=2.0.1';
+import {createMusic, MUSIC_KINDS} from './music.js?v=2.0.1';
 
-const VERSION = '2.0.0';
+const VERSION = '2.0.1';
 const cv = document.getElementById('c');
 const ctx = cv.getContext('2d');
 const PI = Math.PI;
@@ -49,7 +49,7 @@ let editMode = false;        // 꾸미기: 장식 옮기기
 const bubbles = [], particles = [], foods = [], rings = [], hearts = [], zzz = [], drops = [], gdrops = [], pops = [];
 let bubbleTimer = 2, rippleTimer = 0, splashCD = 0, flowK = 0;
 const wdrops = [], streaks = [], bokeh = [], stars = [], leaves = [], flies = [];
-let snail = null, star = null, eventT = 40, eventIdx = 0, rainK = 0, lofiK = 1, dripT = 0;
+let snail = null, star = null, eventT = 40, eventIdx = 0, rainK = 0, dripT = 0;
 
 /* ================= 저장 ================= */
 const KEY = 'eohangmeong.v2', OLD_KEY = 'eohangmeong.v1';   // 1.x 저장본은 옮길 때만 읽음
@@ -75,7 +75,7 @@ function defaults(){
     inv:{}, owned:{bg:['city'], floor:['none', 'sand'], items:[]},
     dex:{}, ach:{}, stats:{eaten:0, cleans:0, babies:0},
     daily:{dn:0, visit:false, clean:false, feed:false, from:null},
-    set:{zoom:1, tod:0, rain:0, lofi:1, fill:0.68, smooth:1, music:'off', orient:'portrait', awake:1},
+    set:{zoom:1, tod:0, rain:0, fill:0.68, smooth:1, music:'off', orient:'portrait', awake:1},
     queue:[], intro:false
   };
 }
@@ -96,7 +96,7 @@ function migrate(o){
   const f = newCreature('goldfish', String(o.name || FIRST_NAME).slice(0, 10), {growth:Math.max(0.35, +o.growth || 0), aff:+o.aff || 0, born:g.born, variant:0});
   g.tanks[0].creatures.push(f); g.tanks[0].sel = f.id;
   g.dex.goldfish = 1;
-  for (const k of ['zoom', 'tod', 'rain', 'lofi', 'fill', 'smooth']) if (o[k] != null) g.set[k] = o[k];
+  for (const k of ['zoom', 'tod', 'rain', 'fill', 'smooth']) if (o[k] != null) g.set[k] = o[k];
   g.set.zoom = [0.55, 1, 1.85][o.zoom | 0] || 1;
   g.daily.dn = o.lastDay ? tn : 0;
   g.queue.push({t:'2.0 업데이트 선물', d:'친구를 들이고 어항을 꾸밀 수 있게 되었습니다.', p:REWARD.welcome + Math.min(1000, ((o.days | 0) * 20))});
@@ -278,7 +278,7 @@ function resize(){
   vign = ctx.createRadialGradient(CX, CY, MIN*0.38, CX, CY, Math.hypot(W, H)*0.62);
   vign.addColorStop(0, 'rgba(0,6,14,0)'); vign.addColorStop(1, 'rgba(0,6,14,.5)');
   floorH = tank && tank.floor !== 'none' ? Math.round(30 * SK) : 0;
-  genBokeh(); sizeBloom();
+  genBokeh();
   computeLevel();
 }
 function clipArea(P, m){
@@ -1264,7 +1264,7 @@ function renderFish(fish, Lp){
   return S;
 }
 
-/* ================= 로파이 분위기: 창밖 풍경, 비, 스탠드 불빛, 필름 질감, 드문 사건 ================= */
+/* ================= 분위기: 창밖 풍경, 비, 스탠드 불빛, 드문 사건 ================= */
 // 창밖 배경 테마별 빛망울 색
 const BOKEH_PAL = {
   city:  [[255,178,102],[255,196,130],[255,160,90],[130,170,255],[150,190,255],[255,140,170]],
@@ -1343,15 +1343,6 @@ function drawScenery(th){
   }
 }
 const lerpC = (a, b, t) => a.map((v, i) => lerp(v, b[i], t));
-const grainPats = [];
-for (let n = 0; n < 2; n++){
-  const c = document.createElement('canvas'); c.width = c.height = 128;
-  const g = c.getContext('2d'), img = g.createImageData(128, 128);
-  for (let i = 0; i < img.data.length; i += 4){ const v = 128 + (Math.random() - 0.5)*200; img.data[i] = img.data[i+1] = img.data[i+2] = v; img.data[i+3] = 255; }
-  g.putImageData(img, 0, 0); grainPats.push(ctx.createPattern(c, 'repeat'));
-}
-const bc1 = document.createElement('canvas'), bx1 = bc1.getContext('2d'), bc2 = document.createElement('canvas'), bx2 = bc2.getContext('2d');
-function sizeBloom(){ bc1.width = Math.max(8, Math.ceil(W/3)); bc1.height = Math.max(8, Math.ceil(H/3)); bc2.width = Math.max(4, Math.ceil(W/9)); bc2.height = Math.max(4, Math.ceil(H/9)); }
 function season(){ const m = new Date().getMonth() + 1; return m >= 3 && m <= 5 ? 'spring' : m <= 8 && m >= 6 ? 'summer' : m >= 9 && m <= 11 ? 'autumn' : 'winter'; }
 
 function spawnSnail(){
@@ -1383,7 +1374,6 @@ function triggerEvent(kind){
 
 function updateAmbience(dt, dn, pr){
   rainK += ((G.set.rain ? 1 : 0) - rainK) * Math.min(1, dt*0.6);
-  lofiK += ((G.set.lofi ? 1 : 0) - lofiK) * Math.min(1, dt*2);
   // 창에 내리는 비
   if (rainK > 0.02){
     const want = 80*rainK, rate = wdrops.length < want*0.5 ? 40 : 11;
@@ -1561,22 +1551,6 @@ function drawSnail(sn, km, g){
   g.stroke();
   g.fillStyle = 'rgba(255,240,220,.35)'; g.beginPath(); g.ellipse(-6.5, -12, 3, 1.6, -0.5, 0, PI*2); g.fill();
   g.restore();
-}
-function lofiPass(){
-  if (lofiK < 0.01) return;
-  const cg = ctx.createLinearGradient(0, 0, 0, H);
-  cg.addColorStop(0, 'rgb(255,190,130)'); cg.addColorStop(1, 'rgb(40,110,125)');
-  ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.24*lofiK; ctx.fillStyle = cg; ctx.fillRect(0, 0, W, H);
-  ctx.globalCompositeOperation = 'saturation'; ctx.globalAlpha = 0.14*lofiK; ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, W, H);
-  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
-  bx1.drawImage(cv, 0, 0, cv.width, cv.height, 0, 0, bc1.width, bc1.height);
-  bx2.drawImage(bc1, 0, 0, bc1.width, bc1.height, 0, 0, bc2.width, bc2.height);
-  ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.15*lofiK; ctx.drawImage(bc2, 0, 0, bc2.width, bc2.height, 0, 0, W, H);
-  const gt = (T/3) % 2, gi = Math.floor(gt), gf = gt - gi;
-  ctx.globalCompositeOperation = 'overlay';
-  ctx.globalAlpha = 0.09*lofiK*(1 - gf); ctx.fillStyle = grainPats[gi]; ctx.fillRect(0, 0, W, H);
-  ctx.globalAlpha = 0.09*lofiK*gf; ctx.fillStyle = grainPats[1 - gi]; ctx.fillRect(0, 0, W, H);
-  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
 }
 
 /* ================= 장식 ================= */
@@ -1876,7 +1850,6 @@ function draw(){
   const gl = ctx.createLinearGradient(0, 0, W*0.6, H*0.5);
   gl.addColorStop(0, 'rgba(255,255,255,.06)'); gl.addColorStop(.35, 'rgba(255,255,255,.015)'); gl.addColorStop(.5, 'rgba(255,255,255,0)');
   ctx.fillStyle = gl; ctx.fillRect(0, 0, W, H);
-  lofiPass();
   ctx.fillStyle = vign; ctx.fillRect(0, 0, W, H);
 }
 
@@ -2026,7 +1999,6 @@ window.addEventListener('keydown', e => {
   else if (e.key === 'f' || e.key === 'F') feed();
   else if (e.key === 't' || e.key === 'T') setOpt('tod', (G.set.tod + 1) % TOD_NAMES.length);
   else if (e.key === 'r' || e.key === 'R') setOpt('rain', G.set.rain ? 0 : 1);
-  else if (e.key === 'l' || e.key === 'L') setOpt('lofi', G.set.lofi ? 0 : 1);
   else if (e.key === 'e' || e.key === 'E'){ triggerEvent(EVENTS[eventIdx % 3]); eventIdx++; }
   else if (e.key === 'Escape'){ if (sheetOpen()) closeSheet(); else if (editMode) setEdit(false); else if (clockOn) setClock(false); }
 });
@@ -2188,7 +2160,6 @@ function renderSettings(){
     <div class="prow"><span class="plabel">물 높이</span><div class="prange"><input id="fill" type="range" min="50" max="90" step="1" value="${Math.round(G.set.fill*100)}" aria-label="물 높이 (퍼센트, 최소 50)"><span id="fillVal">${Math.round(G.set.fill*100)}%</span></div></div>
     <div class="prow"><span class="plabel">시간대</span>${seg('tod', TOD_NAMES.map((n, i) => [i, n]))}</div>
     <div class="prow"><span class="plabel">날씨</span>${seg('rain', [[0, '맑음'], [1, '비']])}</div>
-    <div class="prow"><span class="plabel">로파이 필터</span>${seg('lofi', [[0, '끔'], [1, '켬']])}</div>
     <div class="prow"><span class="plabel">음악</span>${seg('music', MUSIC_KINDS)}</div>
     <div class="prow"><span class="plabel">움직임</span>${seg('smooth', [[0, '배터리 절약'], [1, '부드럽게']])}</div>
     <div class="prow"><span class="plabel">화면 방향</span>${seg('orient', [['portrait', '세로 고정'], ['any', '자동 회전']])}</div>
@@ -2492,7 +2463,7 @@ $('go').addEventListener('click', async () => {
 
 /* ================= 처음 ================= */
 window.addEventListener('resize', () => { resize(); floorH = tank && tank.floor !== 'none' ? Math.round(30 * SK) : 0; });
-rainK = G.set.rain ? 1 : 0; lofiK = G.set.lofi ? 1 : 0; fillCur = G.set.fill; zoom = zoomT = clamp(+G.set.zoom || 1, ZOOM_MIN, ZOOM_MAX);
+rainK = G.set.rain ? 1 : 0; fillCur = G.set.fill; zoom = zoomT = clamp(+G.set.zoom || 1, ZOOM_MIN, ZOOM_MAX);
 if (isNew || !G.intro) for (const t of G.tanks) if (!t.moss) seedMoss(t, 0.28);
 resize(); finishWaves();
 loadTank(G.cur);

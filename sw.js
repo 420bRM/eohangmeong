@@ -1,6 +1,6 @@
 // 어항멍 서비스워커: 앱 파일을 저장해 두고 오프라인에서도 어항을 엽니다.
 // 배포할 때마다 VERSION을 올리면 다음 실행부터 새 파일로 바뀝니다.
-const VERSION = 'v2.0.0';
+const VERSION = 'v2.0.1';
 const CACHE = `eohangmeong-${VERSION}`;
 const Q = `?v=${VERSION.slice(1)}`;
 const SHELL = [
