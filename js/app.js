@@ -1,9 +1,9 @@
 // 어항멍 v2: 물리, 생물, 돌봄, 화면
-import {SPECIES, SPECIES_ORDER, DECOR, DECOR_ORDER, FLOORS, FLOOR_ORDER, BACKGROUNDS, BG_ORDER, ITEMS, ITEM_ORDER, REWARD, ACHIEVEMENTS, NAMES, FIRST_NAME, LIMITS} from './data.js?v=2.0.1';
-import {drawCritter, drawDecor, decorSize, drawFloor, drawThumb} from './critters.js?v=2.0.1';
-import {createMusic, MUSIC_KINDS} from './music.js?v=2.0.1';
+import {SPECIES, SPECIES_ORDER, DECOR, DECOR_ORDER, FLOORS, FLOOR_ORDER, BACKGROUNDS, BG_ORDER, ITEMS, ITEM_ORDER, REWARD, ACHIEVEMENTS, NAMES, FIRST_NAME, LIMITS} from './data.js?v=2.0.2';
+import {drawCritter, drawDecor, decorSize, drawFloor, drawThumb} from './critters.js?v=2.0.2';
+import {createMusic, MUSIC_KINDS} from './music.js?v=2.0.2';
 
-const VERSION = '2.0.1';
+const VERSION = '2.0.2';
 const cv = document.getElementById('c');
 const ctx = cv.getContext('2d');
 const PI = Math.PI;
@@ -75,7 +75,7 @@ function defaults(){
     inv:{}, owned:{bg:['city'], floor:['none', 'sand'], items:[]},
     dex:{}, ach:{}, stats:{eaten:0, cleans:0, babies:0},
     daily:{dn:0, visit:false, clean:false, feed:false, from:null},
-    set:{zoom:1, tod:0, rain:0, fill:0.68, smooth:1, music:'off', orient:'portrait', awake:1},
+    set:{zoom:1, tod:0, rain:0, look:'vivid', fill:0.68, smooth:1, music:'off', orient:'portrait', awake:1},
     queue:[], intro:false
   };
 }
@@ -392,13 +392,32 @@ function causFrame(t){
 const rays = Array.from({length:5}, () => ({x:rand(-.7,.7), w:rand(.05,.14), sp:rand(.08,.2), ph:rand(0,6), amp:rand(20,60), a:rand(.05,.1)}));
 
 /* ================= 하루의 빛 ================= */
-const KEYS = {
+const BASE_KEYS = {
   night:{top:[18,50,78], mid:[10,32,58], deep:[3,12,28], air:[5,10,20], caus:.12, rays:.05, mul:[128,146,205], band:.35, city:1, lamp:.75, win:0},
   dawn: {top:[70,150,172], mid:[34,100,132], deep:[10,40,74], air:[24,30,48], caus:.55, rays:.6, mul:[250,222,214], band:.8, city:.25, lamp:.25, win:.35},
   day:  {top:[46,172,172], mid:[24,128,146], deep:[7,56,88], air:[12,30,42], caus:1, rays:1, mul:[255,255,255], band:1, city:0, lamp:0, win:.6},
   dusk: {top:[70,138,168], mid:[34,86,128], deep:[16,30,70], air:[40,24,44], caus:.6, rays:.85, mul:[255,196,196], band:.85, city:.5, lamp:.5, win:.3},
   eve:  {top:[36,92,118], mid:[18,58,90], deep:[6,22,44], air:[10,14,28], caus:.3, rays:.2, mul:[166,166,214], band:.55, city:.9, lamp:.9, win:0}
 };
+// 물빛 (색감): 시간대별 물 위·가운데·바닥 색과 수면 띠 색
+const LOOKS = {
+  vivid:{band:[200,238,255], night:[[10,40,90],[5,22,62],[1,6,24]], dawn:[[40,120,190],[16,70,150],[4,22,70]], day:[[20,150,215],[6,90,180],[2,28,95]], dusk:[[60,100,180],[26,52,130],[10,14,56]], eve:[[20,70,140],[8,38,100],[2,12,44]]},
+  natural:{band:[222,244,212], air:[[4,8,6],[16,20,16],[6,12,9],[30,22,18],[6,9,8]], night:[[14,40,40],[6,24,26],[2,8,10]], dawn:[[70,120,100],[36,80,66],[10,30,26]], day:[[86,150,110],[40,104,76],[10,44,32]], dusk:[[100,110,80],[52,66,52],[18,24,22]], eve:[[36,70,62],[18,42,40],[5,16,16]]},
+  deep:{band:[190,228,240], night:[[8,24,40],[3,12,24],[0,3,8]], dawn:[[40,90,120],[16,52,80],[3,16,30]], day:[[26,110,140],[8,62,96],[1,18,36]], dusk:[[60,70,110],[24,34,70],[6,8,24]], eve:[[16,50,80],[6,28,54],[1,8,20]]},
+  soft:{band:[205,250,245]}
+};
+const LOOK_NAMES = [['vivid', '선명한'], ['natural', '자연 수조'], ['deep', '깊은 물'], ['soft', '파스텔']];
+let KEYS = BASE_KEYS, BAND = [205, 250, 245];
+function applyLook(k){
+  const L = LOOKS[k] || LOOKS.vivid, order = ['night', 'dawn', 'day', 'dusk', 'eve'];
+  KEYS = {};
+  order.forEach((t, i) => {
+    KEYS[t] = Object.assign({}, BASE_KEYS[t]);
+    if (L[t]){ KEYS[t].top = L[t][0]; KEYS[t].mid = L[t][1]; KEYS[t].deep = L[t][2]; }
+    if (L.air) KEYS[t].air = L.air[i];
+  });
+  BAND = L.band;
+}
 const SCHED = [[0,'night'],[5,'night'],[6.5,'dawn'],[8.5,'day'],[16.5,'day'],[18.3,'dusk'],[19.8,'eve'],[21.5,'night'],[24,'night']];
 const TOD_FIXED = [null, 6.7, 12, 18.3, 23.5];
 const TOD_NAMES = ['지금', '새벽', '낮', '노을', '밤'];
@@ -1769,7 +1788,7 @@ function draw(){
   ctx.save(); ctx.translate(CX, CY); ctx.rotate(psi);
   bandPath(bth);
   const bgr = ctx.createLinearGradient(0, level - 4, 0, level + bth + 8);
-  bgr.addColorStop(0, `rgba(205,250,245,${0.5*Lt.band})`); bgr.addColorStop(1, `rgba(120,210,215,${0.2*Lt.band})`);
+  bgr.addColorStop(0, rgb(BAND, 0.5*Lt.band)); bgr.addColorStop(1, rgb(BAND.map(v => v*0.6), 0.2*Lt.band));
   ctx.fillStyle = bgr; ctx.fill();
   ctx.save(); bandPath(bth); ctx.clip();
   ctx.globalCompositeOperation = 'lighter';
@@ -1792,7 +1811,7 @@ function draw(){
     }
   }
   ctx.restore();
-  frontLine(bth); ctx.strokeStyle = `rgba(200,250,245,${0.22*Lt.band})`; ctx.lineWidth = 1; ctx.stroke();
+  frontLine(bth); ctx.strokeStyle = rgb(BAND, 0.22*Lt.band); ctx.lineWidth = 1; ctx.stroke();
   ctx.restore();
 
   drawEntities(list.filter(i => i.z <= 0.5));
@@ -2159,6 +2178,7 @@ function renderSettings(){
     <div class="prow"><span class="plabel">어항 크기 (두 손가락으로 벌리고 오므려도 됩니다)</span><div class="pseg" id="zoomSeg">${ZOOMS.map((z, i) => `<button data-act="opt" data-k="zoom" data-v="${z}" class="${i === zi ? 'on' : ''}">${['넓게', '보통', '가까이'][i]}</button>`).join('')}</div></div>
     <div class="prow"><span class="plabel">물 높이</span><div class="prange"><input id="fill" type="range" min="50" max="90" step="1" value="${Math.round(G.set.fill*100)}" aria-label="물 높이 (퍼센트, 최소 50)"><span id="fillVal">${Math.round(G.set.fill*100)}%</span></div></div>
     <div class="prow"><span class="plabel">시간대</span>${seg('tod', TOD_NAMES.map((n, i) => [i, n]))}</div>
+    <div class="prow"><span class="plabel">물빛</span>${seg('look', LOOK_NAMES)}</div>
     <div class="prow"><span class="plabel">날씨</span>${seg('rain', [[0, '맑음'], [1, '비']])}</div>
     <div class="prow"><span class="plabel">음악</span>${seg('music', MUSIC_KINDS)}</div>
     <div class="prow"><span class="plabel">움직임</span>${seg('smooth', [[0, '배터리 절약'], [1, '부드럽게']])}</div>
@@ -2189,6 +2209,7 @@ function setOpt(k, v){
   if (k === 'rain') setRainAudio();
   else if (k === 'tod'){ if (!isNight()) for (const c of creatures) c.awakeT = 0; }
   else if (k === 'zoom') zoomT = v;
+  else if (k === 'look') applyLook(v);
   else if (k === 'music') setMusic(v);
   else if (k === 'orient') applyOrient();
   else if (k === 'awake') v ? wake() : releaseWake();
@@ -2463,6 +2484,8 @@ $('go').addEventListener('click', async () => {
 
 /* ================= 처음 ================= */
 window.addEventListener('resize', () => { resize(); floorH = tank && tank.floor !== 'none' ? Math.round(30 * SK) : 0; });
+if (!LOOKS[G.set.look]) G.set.look = 'vivid';
+applyLook(G.set.look); Lt = mixL(lightAt(effHour()), lightAt(effHour()), 0);
 rainK = G.set.rain ? 1 : 0; fillCur = G.set.fill; zoom = zoomT = clamp(+G.set.zoom || 1, ZOOM_MIN, ZOOM_MAX);
 if (isNew || !G.intro) for (const t of G.tanks) if (!t.moss) seedMoss(t, 0.28);
 resize(); finishWaves();
